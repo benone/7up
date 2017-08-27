@@ -5,7 +5,18 @@ import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
+import org.web3j.crypto.CipherException;
+import org.web3j.crypto.Credentials;
+import org.web3j.crypto.WalletUtils;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.exceptions.TransactionTimeoutException;
+import org.web3j.protocol.http.HttpService;
+import org.web3j.tx.Transfer;
+import org.web3j.utils.Convert;
 
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,15 +31,22 @@ import static java.util.stream.Collectors.toList;
 
 public class OprosBot extends TelegramLongPollingBot {
     enum State { NOT_REGISTERED, WAITING_QUIZ, IN_PROGRESS_QUIZ}
+    enum Type { USER, COMPANY}
 
     private static Map<String, UserData> users = new HashMap<>();
     private static Set<Poll> polls = new HashSet<Poll>();
 
+    static Web3j web3 = Web3j.build(new HttpService());  // defaults to http://localhost:8545/
+    static Credentials credentials;
+
+
 
     static {
-        users.put("northcapen", new UserData(NOT_REGISTERED));
+        users.put("northcapen", new UserData(WAITING_QUIZ));
         users.put("melsrose", new UserData(NOT_REGISTERED));
         users.put("gex194", new UserData(NOT_REGISTERED));
+        users.put("cocacola", new UserData(Type.COMPANY, "123", "/var/folders/35/qblq10fs0xd0dglld1rz8my40000gn/T/ethereum_dev_mode/keystore/UTC--2017-08-27T00-29-54.608326416Z--c3878f6010777abe4296de6208c2ca46ed9ccd8e"));
+
 
         Question question = new Question(1L, "Побуждает ли вас к отъезду обстановка в стране?\nДа/Нет", asList("Да", "Нет"));
         Question question2 = new Question(2L, "Представьте: в выборах участвуют Путин и Навальный. За кого будете голосовать?", asList("Путин", "Навальный"));
@@ -39,7 +57,21 @@ public class OprosBot extends TelegramLongPollingBot {
         Question question7 = new Question(7L, "Как вы относитесь к людям с нетрадиционной ориентацией?\n Хорошо/Плохо/Нейтрально" , asList("Хорошо","Плохо", "Нейтрально"));
         Question question8 = new Question(8L, "Тюрьмы в России людей исправляют или калечат?", asList("Исправляют", "Калечат"));
         Question question9 = new Question(9L, "Любите ли вы пушистых котиков?:)\nДа/Нет?", asList("Да", "Нет"));
-        polls.add(new Poll(1L, "Опрос", asList(question, question2, question3, question4, question5,question6,question7,question8, question9)));
+        Poll poll = new Poll(1L, "Важный опрос", asList(question, question2, question3, question4, question5, question6, question7, question8, question9));
+
+        poll.author = "Coca cola";
+        poll.price = BigDecimal.TEN;
+        polls.add(poll);
+
+        try {
+
+            credentials = WalletUtils.loadCredentials(users.get("cocacola").password, users.get("cocacola").privateKeyFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (CipherException e) {
+            e.printStackTrace();
+        }
+
 
     }
 
@@ -72,7 +104,7 @@ public class OprosBot extends TelegramLongPollingBot {
                         userData.questionId = 1L;
                         userData.state = IN_PROGRESS_QUIZ;
 
-                        result = poll.getQuestion(userData.questionId).text;
+                        result = "Это опрос от компании " + poll.author + " за " + poll.price + " ETH. " + poll.getQuestion(userData.questionId).text;
                     } else {
                         result = "Нужно начать опрос (/start_quiz)";
                     }
@@ -83,7 +115,20 @@ public class OprosBot extends TelegramLongPollingBot {
                     Question question = poll.getQuestion(userData.questionId);
                     if(userData.questionId  == poll.questions.size()) {
                         userData.state = State.WAITING_QUIZ;
-                        result = "Спасибо за опрос. Ваши деньги очень скоро придут на Ваш счет!";
+                        new Thread(() -> {
+                            try {
+                                TransactionReceipt transactionReceipt = Transfer.sendFunds(
+                                        web3, credentials, "0x5e2E5b93BCa911C2e3A275B7b43eBbBf4ca280ed", poll.price, Convert.Unit.ETHER);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            } catch (TransactionTimeoutException e) {
+                                e.printStackTrace();
+                            }
+                        }).start();
+
+                        result = "Спасибо за опрос. Ваши деньги (" + poll.price + " ETH) очень скоро придут на Ваш счет!";
                     }
                     else if (question.answer.contains(message_text)) {
                         userData.questionId = userData.questionId + 1;
@@ -122,18 +167,32 @@ public class OprosBot extends TelegramLongPollingBot {
 }
 
 class UserData {
+    OprosBot.Type type;
+
     OprosBot.State state;
     Long pollId;
     Long questionId;
 
+    String password;
+    String privateKeyFile;
+    private String accountNumber;
+
     public UserData(OprosBot.State state) {
         this.state = state;
+    }
+
+    public UserData(OprosBot.Type type, String password, String privateKeyFile) {
+        this.type = type;
+        this.password = password;
+        this.privateKeyFile = privateKeyFile;
     }
 }
 
 class Poll {
     Long id;
     String name;
+    BigDecimal price;
+    String author;
     List<Question> questions = new ArrayList<>();
 
     public Poll(Long id, String name, List<Question> questions) {

@@ -50,5 +50,23 @@
     <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.9" level="project" />
     <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpmime:4.5.3" level="project" />
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.5" level="project" />
+    <orderEntry type="library" name="Maven: org.web3j:core:2.3.0" level="project" />
+    <orderEntry type="library" name="Maven: io.reactivex:rxjava:1.2.4" level="project" />
+    <orderEntry type="library" name="Maven: com.squareup:javapoet:1.7.0" level="project" />
+    <orderEntry type="library" name="Maven: org.bouncycastle:bcprov-jdk15on:1.54" level="project" />
+    <orderEntry type="library" name="Maven: com.github.jnr:jnr-unixsocket:0.15" level="project" />
+    <orderEntry type="library" name="Maven: com.github.jnr:jnr-ffi:2.1.2" level="project" />
+    <orderEntry type="library" name="Maven: com.github.jnr:jffi:1.2.14" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Maven: com.github.jnr:jffi:native:1.2.14" level="project" />
+    <orderEntry type="library" name="Maven: org.ow2.asm:asm:5.0.3" level="project" />
+    <orderEntry type="library" name="Maven: org.ow2.asm:asm-commons:5.0.3" level="project" />
+    <orderEntry type="library" name="Maven: org.ow2.asm:asm-analysis:5.0.3" level="project" />
+    <orderEntry type="library" name="Maven: org.ow2.asm:asm-tree:5.0.3" level="project" />
+    <orderEntry type="library" name="Maven: org.ow2.asm:asm-util:5.0.3" level="project" />
+    <orderEntry type="library" name="Maven: com.github.jnr:jnr-x86asm:1.0.2" level="project" />
+    <orderEntry type="library" name="Maven: com.github.jnr:jnr-constants:0.9.6" level="project" />
+    <orderEntry type="library" name="Maven: com.github.jnr:jnr-enxio:0.14" level="project" />
+    <orderEntry type="library" name="Maven: com.github.jnr:jnr-posix:3.0.33" level="project" />
+    <orderEntry type="library" name="Maven: com.lambdaworks:scrypt:1.4.0" level="project" />
   </component>
 </module>
