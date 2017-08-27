@@ -42,31 +42,27 @@ public class OprosBot extends TelegramLongPollingBot {
 
 
     static {
-        users.put("northcapen", new UserData(WAITING_QUIZ));
+        users.put("northcapen", new UserData(NOT_REGISTERED));
         users.put("melsrose", new UserData(NOT_REGISTERED));
         users.put("gex194", new UserData(NOT_REGISTERED));
         users.put("Anikanaum", new UserData(NOT_REGISTERED));
-        users.put("cocacola", new UserData(Type.COMPANY, "123", "/var/folders/35/qblq10fs0xd0dglld1rz8my40000gn/T/ethereum_dev_mode/keystore/UTC--2017-08-27T00-29-54.608326416Z--c3878f6010777abe4296de6208c2ca46ed9ccd8e"));
+        users.put("Библиоглобус", new UserData(Type.COMPANY, "123", "/var/folders/35/qblq10fs0xd0dglld1rz8my40000gn/T/ethereum_dev_mode/keystore/UTC--2017-08-27T00-29-54.608326416Z--c3878f6010777abe4296de6208c2ca46ed9ccd8e"));
 
 
-        Question question = new Question(1L, "Побуждает ли вас к отъезду обстановка в стране?\nДа/Нет", asList("Да", "Нет"));
-        Question question2 = new Question(2L, "Представьте: в выборах участвуют Путин и Навальный. За кого будете голосовать?", asList("Путин", "Навальный"));
-        Question question3 = new Question(3L, "Власть в России страшная или смешная?", asList("Страшная", "Смешная"));
-        Question question4 = new Question(4L, "Если была бы возможность изменить прошлое, Вы бы попробовали?\nДа/Нет", asList("Да", "Нет"));
-        Question question5 = new Question(5L, "Если будет война, вы пойдете защищать виноградники Медведева?\n Да/Нет" , asList("Да", "Нет"));
-        Question question6 = new Question(6L, "Хотели бы вы жить в Северной Корее?\nДа/Нет", asList("Да", "Нет"));
-        Question question7 = new Question(7L, "Как вы относитесь к людям с нетрадиционной ориентацией?\n Хорошо/Плохо/Нейтрально" , asList("Хорошо","Плохо", "Нейтрально"));
-        Question question8 = new Question(8L, "Тюрьмы в России людей исправляют или калечат?", asList("Исправляют", "Калечат"));
-        Question question9 = new Question(9L, "Любите ли вы пушистых котиков?:)\nДа/Нет?", asList("Да", "Нет"));
-        Poll poll = new Poll(1L, "Важный опрос", asList(question, question2, question3, question4, question5, question6, question7, question8, question9));
+        Question question = new Question(1L, "Хотели ли вы провести свой отпуск с любимым котиком? (Да/Нет/Я отдыхаю только с котиком)", asList("Да", "Нет", "Я отдыхаю только с котиком"));
+        Question question2 = new Question(2L, "Помогает ли вам алкоголь лучше понимать иностранный язык? (Немного/Средне/Существенно)", asList("Немного", "Средне", "Существенно"));
+        Question question3 = new Question(3L, "Было ли желание у вас проветрить салон самолета? (Было/Не было/Как-то я почти открыл иллюминатор)", asList("Было", "Не было", "Как-то я почти открыл иллюминатор"));
+        Question question4 = new Question(4L, "Какой вид транспорта вы предпочтете в путешествиях? (Верблюд/Автостоп/Кривая коза)", asList("Верблюд", "Автостоп", "Кривая коза"));
+        Poll poll = new Poll(1L, "Важный опрос", asList(question, question2, question3, question4));
 
-        poll.author = "Coca cola";
-        poll.price = BigDecimal.TEN;
+        poll.author = "Библиоглобус";
+        poll.price = new BigDecimal("0.05");
+        users.get("northcapen").accountNumber = "0x5e2E5b93BCa911C2e3A275B7b43eBbBf4ca280ed";
+
         polls.add(poll);
 
         try {
-
-            credentials = WalletUtils.loadCredentials(users.get("cocacola").password, users.get("cocacola").privateKeyFile);
+            credentials = WalletUtils.loadCredentials(users.get("Библиоглобус").password, users.get("Библиоглобус").privateKeyFile);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (CipherException e) {
@@ -86,13 +82,11 @@ public class OprosBot extends TelegramLongPollingBot {
 
             switch (state) {
                 case NOT_REGISTERED:
-                    if (message_text.equals("/start_register")) {
-                        result = "Здесь ссылка для регистрации (/finish_register)";
-                    } else if (message_text.equals("/finish_register")) {
+                    if (message_text.equals("Готово")) {
                         users.put(userName, new UserData(WAITING_QUIZ));
-                        result = "Вы зарегистрированы. Начните опрос (/start_quiz)";
+                        result = "Спасибо, вы зарегистрированы. Вам создан кошелек: " + userData.accountNumber + ". Начните опрос (/start_quiz)";
                     } else {
-                        result = "Вы еще не зарегистрированы (/start_register)";
+                        result = "Наш чат-бот Opros.io приветствует вас. Теперь вы можете, не покидая телеграм, делиться своим мнением и заодно подзаработать. Чтобы начать, зарегиструйтесь по ссылке (https://github.com/gex194/7up) и напишите 'Готово', когда закончите";
 
                     }
                     break;
@@ -119,7 +113,7 @@ public class OprosBot extends TelegramLongPollingBot {
                         new Thread(() -> {
                             try {
                                 TransactionReceipt transactionReceipt = Transfer.sendFunds(
-                                        web3, credentials, "0x5e2E5b93BCa911C2e3A275B7b43eBbBf4ca280ed", poll.price, Convert.Unit.ETHER);
+                                        web3, credentials, userData.accountNumber, poll.price, Convert.Unit.ETHER);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             } catch (IOException e) {
@@ -137,7 +131,6 @@ public class OprosBot extends TelegramLongPollingBot {
                     } else {
                         result = "Вот сейчас не совсем понял. Попробуем еще раз: " + question.text;
                     }
-
 
                     break;
             }
@@ -176,7 +169,7 @@ class UserData {
 
     String password;
     String privateKeyFile;
-    private String accountNumber;
+    String accountNumber;
 
     public UserData(OprosBot.State state) {
         this.state = state;
