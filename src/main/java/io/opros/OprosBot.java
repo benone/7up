@@ -42,10 +42,6 @@ public class OprosBot extends TelegramLongPollingBot {
 
 
     static {
-        users.put("northcapen", new UserData(NOT_REGISTERED));
-        users.put("melsrose", new UserData(NOT_REGISTERED));
-        users.put("gex194", new UserData(NOT_REGISTERED));
-        users.put("Anikanaum", new UserData(NOT_REGISTERED));
         users.put("Библиоглобус", new UserData(Type.COMPANY, "123", "/var/folders/35/qblq10fs0xd0dglld1rz8my40000gn/T/ethereum_dev_mode/keystore/UTC--2017-08-27T00-29-54.608326416Z--c3878f6010777abe4296de6208c2ca46ed9ccd8e"));
 
 
@@ -57,7 +53,6 @@ public class OprosBot extends TelegramLongPollingBot {
 
         poll.author = "Библиоглобус";
         poll.price = new BigDecimal("0.05");
-        users.get("northcapen").accountNumber = "0x5e2E5b93BCa911C2e3A275B7b43eBbBf4ca280ed";
 
         polls.add(poll);
 
@@ -77,7 +72,13 @@ public class OprosBot extends TelegramLongPollingBot {
             String message_text = update.getMessage().getText();
             String result = null;
             String userName = update.getMessage().getFrom().getUserName();
-            final UserData userData = users.get(userName);
+            UserData userData = users.get(userName);
+            if(userData == null) {
+                userData = new UserData(NOT_REGISTERED);
+                userData.accountNumber = "0x5e2E5b93BCa911C2e3A275B7b43eBbBf4ca280ed";
+                users.put(userName, userData);
+            }
+
             State state = userData.state;
 
             switch (state) {
@@ -99,21 +100,22 @@ public class OprosBot extends TelegramLongPollingBot {
                         userData.questionId = 1L;
                         userData.state = IN_PROGRESS_QUIZ;
 
-                        result = "Это опрос от компании " + poll.author + " за " + poll.price + " ETH. " + poll.getQuestion(userData.questionId).text;
+                        result = "Это опрос от компании " + poll.author + " за " + poll.price + " ETH. \\n\\r" + poll.getQuestion(userData.questionId).text;
                     } else {
                         result = "Нужно начать опрос (/start_quiz)";
                     }
                     break;
 
                 case IN_PROGRESS_QUIZ:
-                    Poll poll = polls.stream().filter(p -> Objects.equals(p.id, userData.pollId)).collect(toList()).get(0);
+                    UserData finalUserData = userData;
+                    Poll poll = polls.stream().filter(p -> Objects.equals(p.id, finalUserData.pollId)).collect(toList()).get(0);
                     Question question = poll.getQuestion(userData.questionId);
                     if(userData.questionId  == poll.questions.size()) {
                         userData.state = State.WAITING_QUIZ;
                         new Thread(() -> {
                             try {
                                 TransactionReceipt transactionReceipt = Transfer.sendFunds(
-                                        web3, credentials, userData.accountNumber, poll.price, Convert.Unit.ETHER);
+                                        web3, credentials, finalUserData.accountNumber, poll.price, Convert.Unit.ETHER);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             } catch (IOException e) {
@@ -129,7 +131,7 @@ public class OprosBot extends TelegramLongPollingBot {
                         userData.questionId = userData.questionId + 1;
                         result = poll.getQuestion(userData.questionId).text;
                     } else {
-                        result = "Вот сейчас не совсем понял. Попробуем еще раз: " + question.text;
+                        result = "Вот сейчас не совсем понял. \\n\\rПопробуем еще раз: " + question.text;
                     }
 
                     break;
