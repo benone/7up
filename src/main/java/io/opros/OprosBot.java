@@ -45,6 +45,7 @@ public class OprosBot extends TelegramLongPollingBot {
         users.put("northcapen", new UserData(WAITING_QUIZ));
         users.put("melsrose", new UserData(NOT_REGISTERED));
         users.put("gex194", new UserData(NOT_REGISTERED));
+        users.put("Anikanaum", new UserData(NOT_REGISTERED));
         users.put("cocacola", new UserData(Type.COMPANY, "123", "/var/folders/35/qblq10fs0xd0dglld1rz8my40000gn/T/ethereum_dev_mode/keystore/UTC--2017-08-27T00-29-54.608326416Z--c3878f6010777abe4296de6208c2ca46ed9ccd8e"));
 
 
